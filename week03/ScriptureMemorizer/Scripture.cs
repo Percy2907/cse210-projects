@@ -3,57 +3,67 @@ using System.Collections.Generic;
 
 public class Scripture
 {
-    private Reference reference;
-    private List<Word> words;
+    private Reference _reference;
+    private List<Word> _words;
 
     public Scripture(Reference reference, string text)
     {
-        this.reference = reference;
-        words = new List<Word>();
-
-        string[] splitWords = text.Split(' ');
-        foreach (string w in splitWords)
+        _reference = reference;
+        _words = new List<Word>();
+        foreach (string word in text.Split(' '))
         {
-            words.Add(new Word(w));
+            _words.Add(new Word(word));
         }
     }
 
-    public void HideRandomWords(int count = 3)
+    public void HideRandomWords(int count)
     {
         Random rand = new Random();
         int hidden = 0;
+        List<int> visibleIndices = new List<int>();
 
-        while (hidden < count)
+        for (int i = 0; i < _words.Count; i++)
         {
-            int index = rand.Next(words.Count);
-            if (!words[index].IsHidden())
-            {
-                words[index].Hide();
-                hidden++;
-            }
+            if (!_words[i].IsHidden())
+                visibleIndices.Add(i);
+        }
 
-            // Break if all words are already hidden
-            if (IsCompletelyHidden())
+        while (hidden < count && visibleIndices.Count > 0)
+        {
+            int index = rand.Next(visibleIndices.Count);
+            _words[visibleIndices[index]].Hide();
+            visibleIndices.RemoveAt(index);
+            hidden++;
+        }
+    }
+
+    public void RevealOneHiddenWord()
+    {
+        for (int i = 0; i < _words.Count; i++)
+        {
+            if (_words[i].IsHidden())
+            {
+                _words[i].Reveal();
                 break;
+            }
         }
     }
 
     public string GetDisplayText()
     {
-        string display = reference.GetDisplayText() + " - ";
-        foreach (Word word in words)
+        string text = $"{_reference.GetDisplayText()}\n\n";
+        foreach (Word word in _words)
         {
-            display += word.GetDisplayText() + " ";
+            text += word.GetDisplayText() + " ";
         }
-        return display.Trim();
+        return text.Trim();
     }
 
     public bool IsCompletelyHidden()
     {
-        foreach (Word word in words)
+        foreach (Word word in _words)
         {
-            if (!word.IsHidden())
-                return false;
+            if (!word.IsHidden()) return false;
         }
         return true;
     }
